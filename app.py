@@ -7,18 +7,19 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_cors import CORS
-from flask_migrate import Migrate # Importamos Flask-Migrate
+from flask_migrate import Migrate
 
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.config['SECRET_KEY'] = 'una-clave-secreta-muy-dificil-de-adivinar'
 
-# --- CAMBIO CLAVE PARA RENDER ---
+# --- CONFIGURACIÓN DE LA BASE DE DATOS PARA RENDER ---
 # La URL de la base de datos se leerá de una variable de entorno en el servidor de Render
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)
-# --- FIN DEL CAMBIO ---
-
+db_url = os.environ.get('DATABASE_URL')
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db) # Inicializamos Flask-Migrate
@@ -31,7 +32,7 @@ login_manager.init_app(app)
 def unauthorized():
     return jsonify({'status': 'error', 'message': 'Se requiere autenticación'}), 401
 
-# --- MODELOS DE LA BASE DE DATOS (Sin cambios) ---
+# --- MODELOS DE LA BASE DE DATOS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -87,7 +88,7 @@ class Gasto(db.Model):
             'registrado_por': self.registrado_por
         }
 
-# --- RUTAS (Sin cambios) ---
+# --- RUTAS ---
 @app.route("/api/login", methods=['POST'])
 def login():
     data = request.json
@@ -174,17 +175,21 @@ def descargar_reporte():
     except Exception as e:
         return str(e)
 
-# --- CREACIÓN DE USUARIOS INICIALES ---
-def create_initial_users():
+# --- COMANDO PARA INICIALIZAR LA BASE DE DATOS ---
+@app.cli.command("init-db")
+def init_db_command():
+    """Crea las tablas de la base de datos y los usuarios iniciales."""
     with app.app_context():
         db.create_all()
         if not User.query.filter_by(username='admin').first():
             admin_user = User(username='admin', role='admin')
             admin_user.set_password('admin123')
             db.session.add(admin_user)
+            print("Usuario admin creado.")
         if not User.query.filter_by(username='tesorero').first():
             tesorero_user = User(username='tesorero', role='tesorero')
             tesorero_user.set_password('tesorero123')
             db.session.add(tesorero_user)
+            print("Usuario tesorero creado.")
         db.session.commit()
-        print("Usuarios iniciales creados o ya existentes.")
+        print("Base de datos inicializada y usuarios creados.")
