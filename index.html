@@ -1,0 +1,305 @@
+
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Condominio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --color-rojo-principal: #c8102e; --color-rojo-secundario: #a10d25; --color-negro-texto: #212529;
+            --color-gris-fondo: #f4f5f7; --color-blanco: #ffffff; --sombra-suave: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        body {
+            font-family: 'Poppins', sans-serif; background-color: var(--color-gris-fondo); margin: 0;
+            color: var(--color-negro-texto); display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px; box-sizing: border-box;
+        }
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--color-gris-fondo); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; transition: opacity 0.3s ease;
+        }
+        #login-box {
+            background: var(--color-blanco); padding: 40px; border-radius: 12px;
+            box-shadow: var(--sombra-suave); text-align: center; width: 100%; max-width: 380px;
+        }
+        #login-box h2 { margin-top: 0; font-size: 1.8em; }
+        #login-box .form-group { text-align: left; }
+        #login-error { color: var(--color-rojo-principal); margin-top: 15px; min-height: 20px; font-weight: 500;}
+        #app-wrapper { display: none; width: 100%; max-width: 950px; }
+        .container {
+            width: 100%; background-color: var(--color-blanco); border-radius: 12px;
+            box-shadow: var(--sombra-suave); overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, var(--color-rojo-principal), var(--color-rojo-secundario));
+            color: var(--color-blanco); padding: 20px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        header h1 { margin: 0; font-size: 1.5em; font-weight: 600; }
+        #user-info { font-size: 0.9em; display: flex; align-items: center; }
+        #logout-button {
+            background: none; border: 1px solid rgba(255,255,255,0.5); color: var(--color-blanco);
+            padding: 5px 12px; border-radius: 5px; cursor: pointer; margin-left: 15px;
+            transition: background-color 0.2s;
+        }
+        #logout-button:hover { background-color: rgba(255,255,255,0.1); }
+        nav {
+            background-color: var(--color-blanco); border-bottom: 1px solid #e0e0e0; display: flex;
+            justify-content: center; padding: 0;
+        }
+        nav a {
+            color: var(--color-negro-texto); text-decoration: none; padding: 18px 30px; font-weight: 500;
+            transition: all 0.3s ease; position: relative;
+        }
+        nav a::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 0; height: 3px; background-color: var(--color-rojo-principal); transition: width 0.3s ease;
+        }
+        nav a:hover, nav a.active { color: var(--color-rojo-principal); }
+        nav a.active::after { width: 70%; }
+        main { padding: 30px; }
+        .form-section h2 {
+            font-size: 1.8em; font-weight: 600; color: var(--color-negro-texto); margin-top: 0;
+            margin-bottom: 25px; position: relative;
+        }
+        .form-section h2::after {
+            content: ''; position: absolute; bottom: -8px; left: 0; width: 50px; height: 3px;
+            background-color: var(--color-rojo-principal);
+        }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
+        .form-group label { margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px; border: 1px solid #dcdcdc; border-radius: 8px; box-sizing: border-box;
+            transition: all 0.3s ease; background-color: #fdfdfd;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--color-rojo-principal); box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.15);
+        }
+        .form-actions { margin-top: 30px; text-align: right; }
+        button {
+            background: linear-gradient(135deg, var(--color-rojo-principal), var(--color-rojo-secundario));
+            color: var(--color-blanco); padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer;
+            font-size: 16px; font-weight: 500; transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(200, 16, 46, 0.3);
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(200, 16, 46, 0.4); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .reports-table {
+            width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: var(--sombra-suave);
+            border-radius: 8px; overflow: hidden;
+        }
+        .reports-table th, .reports-table td { padding: 15px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        .reports-table th { background-color: var(--color-negro-texto); color: var(--color-blanco); font-weight: 500; }
+        .reports-table tr:last-child td { border-bottom: none; }
+        .reports-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .loader { text-align: center; padding: 20px; color: #888; }
+    </style>
+</head>
+<body>
+
+    <div id="login-overlay">
+        <div id="login-box">
+            <h2>Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="form-group"><label for="username">Usuario</label><input type="text" id="username" name="username" required></div>
+                <div class="form-group" style="margin-top: 15px;"><label for="password">Contraseña</label><input type="password" id="password" name="password" required></div>
+                <div id="login-error"></div>
+                <div class="form-actions"><button type="submit">Ingresar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-wrapper">
+        <div class="container">
+            <header>
+                <h1>Gestión de Condominio</h1>
+                <div id="user-info"><span id="welcome-message"></span><button id="logout-button">Salir</button></div>
+            </header>
+            <nav>
+                <a href="#" id="nav-home" class="active">Inicio</a>
+                <a href="#" id="nav-register-payment">Registrar Pago</a>
+                <a href="#" id="nav-register-expense">Registrar Gasto</a>
+                <a href="#" id="nav-reports">Reportes</a>
+            </nav>
+            <main>
+                <section id="home-section"><h2>¡Bienvenido!</h2><p>Seleccione una opción del menú.</p></section>
+                <section id="register-payment-section" class="form-section" style="display: none;"><h2>Registrar Nuevo Pago</h2><form id="payment-form"></form></section>
+                <section id="register-expense-section" class="form-section" style="display: none;"><h2>Registrar Nuevo Gasto</h2><form id="expense-form"></form></section>
+                <section id="reports-section" style="display: none;">
+                    <h2>Reportes Mensuales</h2>
+                    <div class="form-actions" style="margin-top: -10px; margin-bottom: 20px;"><button id="download-report">Descargar Reporte</button></div>
+                    <h3>Relación de Pagos</h3>
+                    <table class="reports-table">
+                        <thead><tr><th>Apto</th><th>Fecha</th><th>Mes</th><th>Monto USD</th><th>Monto BS</th><th>Forma Pago</th><th>Referencia</th><th>Registrado por</th></tr></thead>
+                        <tbody id="payments-table-body"></tbody>
+                    </table>
+                    <h3 style="margin-top: 40px;">Relación de Gastos</h3>
+                    <table class="reports-table">
+                        <thead><tr><th>Fecha</th><th>Descripción</th><th>Proveedor</th><th>Monto</th><th>Factura</th><th>Registrado por</th></tr></thead>
+                        <tbody id="expenses-table-body"></tbody>
+                    </table>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('payment-form').innerHTML = `
+            <div class="form-grid">
+                <div class="form-group"><label for="apto">Nº de Apartamento / Local</label><input type="text" id="apto" name="apto" placeholder="Ej: 1-01, Local 1" required></div>
+                <div class="form-group"><label for="payment-date">Fecha de Pago</label><input type="date" id="payment-date" name="payment-date" required></div>
+                <div class="form-group"><label for="month-paid">Mes Cancelado</label><select id="month-paid" name="month-paid" required><option value="" disabled selected>Seleccione un mes</option><option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option></select></div>
+                <div class="form-group"><label for="payment-method">Forma de Pago</label><select id="payment-method" name="payment-method" required><option value="" disabled selected>Seleccione una forma</option><option value="Efectivo USD">Efectivo USD</option><option value="Pago Móvil">Pago Móvil</option><option value="Transferencia">Transferencia</option><option value="Mixto">Mixto</option></select></div>
+                <div class="form-group"><label for="amount-usd">Monto Pagado en USD ($)</label><input type="number" id="amount-usd" name="amount-usd" step="0.01" placeholder="0.00"></div>
+                <div class="form-group"><label for="amount-bs">Monto Pagado en Bolívares (Bs.)</label><input type="number" id="amount-bs" name="amount-bs" step="0.01" placeholder="0.00"></div>
+            </div>
+            <div class="form-group" style="margin-top: 25px;"><label for="reference-number">Número de Referencia (si aplica)</label><input type="text" id="reference-number" name="reference-number"></div>
+            <div class="form-group"><label for="observations">Observaciones</label><textarea id="observations" name="observations" placeholder="Cualquier detalle adicional..."></textarea></div>
+            <div class="form-actions"><button type="submit">Guardar Pago</button></div>`;
+        document.getElementById('expense-form').innerHTML = `
+            <div class="form-grid">
+                <div class="form-group"><label for="expense-date">Fecha del Gasto</label><input type="date" id="expense-date" name="expense-date" required></div>
+                <div class="form-group"><label for="description">Descripción del Gasto</label><input type="text" id="description" name="description" placeholder="Ej: Mantenimiento Ascensor" required></div>
+                <div class="form-group"><label for="amount">Monto del Gasto (Moneda de pago)</label><input type="number" id="amount" name="amount" step="0.01" required></div>
+                <div class="form-group"><label for="supplier">Proveedor</label><input type="text" id="supplier" name="supplier" placeholder="Ej: Ascensores Fénix, C.A."></div>
+            </div>
+            <div class="form-group" style="margin-top: 25px;"><label for="invoice-number">Número de Factura o Recibo</label><input type="text" id="invoice-number" name="invoice-number"></div>
+            <div class="form-actions"><button type="submit">Guardar Gasto</button></div>`;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginOverlay = document.getElementById('login-overlay');
+            const appWrapper = document.getElementById('app-wrapper');
+            const loginForm = document.getElementById('login-form');
+            const loginError = document.getElementById('login-error');
+            const welcomeMessage = document.getElementById('welcome-message');
+            const logoutButton = document.getElementById('logout-button');
+            const navLinks = document.querySelectorAll('nav a');
+            const sections = document.querySelectorAll('main > section');
+            const paymentForm = document.getElementById('payment-form');
+            const expenseForm = document.getElementById('expense-form');
+            const downloadButton = document.getElementById('download-report');
+            
+            const API_BASE_URL = 'http://127.0.0.1:5000';
+
+            function checkUserSession() {
+                fetch(`${API_BASE_URL}/api/check_session`, {credentials: 'include'})
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.logged_in) {
+                            showApp(data.username, data.role);
+                        } else {
+                            showLogin();
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error de conexión:", error);
+                        loginError.textContent = "No se pudo conectar al servidor.";
+                    });
+            }
+
+            function showApp(username, role) {
+                loginOverlay.style.display = 'none';
+                appWrapper.style.display = 'block';
+                welcomeMessage.textContent = `Bienvenido, ${username} (${role})`;
+            }
+
+            function showLogin() {
+                loginOverlay.style.display = 'flex';
+                appWrapper.style.display = 'none';
+            }
+
+            loginForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const formData = new FormData(loginForm);
+                const data = Object.fromEntries(formData.entries());
+                
+                fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showApp(data.username, data.role);
+                    } else {
+                        loginError.textContent = data.message;
+                    }
+                });
+            });
+
+            logoutButton.addEventListener('click', () => {
+                fetch(`${API_BASE_URL}/api/logout`, {credentials: 'include'})
+                    .then(() => window.location.reload());
+            });
+            
+            function showSection(sectionId) {
+                sections.forEach(section => {
+                    section.style.display = section.id === sectionId ? 'block' : 'none';
+                });
+                if (sectionId === 'reports-section') {
+                    loadReports();
+                }
+            }
+            navLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    const sectionId = link.id.replace('nav-', '') + '-section';
+                    showSection(sectionId);
+                });
+            });
+            paymentForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const formData = new FormData(paymentForm);
+                const data = Object.fromEntries(formData.entries());
+                fetch(`${API_BASE_URL}/api/pagos`, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, credentials: 'include'})
+                .then(response => response.json()).then(result => { alert(result.mensaje); paymentForm.reset(); }).catch(error => console.error('Error:', error));
+            });
+            expenseForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const formData = new FormData(expenseForm);
+                const data = Object.fromEntries(formData.entries());
+                fetch(`${API_BASE_URL}/api/gastos`, { method: 'POST', body: JSON.stringify(data), headers: { 'Content-Type': 'application/json' }, credentials: 'include'})
+                .then(response => response.json()).then(result => { alert(result.mensaje); expenseForm.reset(); }).catch(error => console.error('Error:', error));
+            });
+            downloadButton.addEventListener('click', () => {
+                window.location.href = `${API_BASE_URL}/api/reporte-excel`;
+            });
+            function loadReports() {
+                const paymentsBody = document.getElementById('payments-table-body');
+                const expensesBody = document.getElementById('expenses-table-body');
+                paymentsBody.innerHTML = '<tr class="loader"><td colspan="8">Cargando pagos...</td></tr>';
+                expensesBody.innerHTML = '<tr class="loader"><td colspan="6">Cargando gastos...</td></tr>';
+                fetch(`${API_BASE_URL}/api/pagos`, {credentials: 'include'}).then(response => response.json()).then(pagos => {
+                    paymentsBody.innerHTML = '';
+                    if (pagos.length > 0) {
+                        pagos.forEach(pago => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${pago.apartamento}</td><td>${pago.fecha_pago}</td><td>${pago.mes_cancelado}</td><td>$${pago.monto_usd.toFixed(2)}</td><td>Bs. ${pago.monto_bs.toFixed(2)}</td><td>${pago.forma_pago}</td><td>${pago.referencia || ''}</td><td>${pago.registrado_por || ''}</td>`;
+                            paymentsBody.appendChild(tr);
+                        });
+                    } else { paymentsBody.innerHTML = '<tr class="loader"><td colspan="8">No hay pagos registrados.</td></tr>'; }
+                });
+                fetch(`${API_BASE_URL}/api/gastos`, {credentials: 'include'}).then(response => response.json()).then(gastos => {
+                    expensesBody.innerHTML = '';
+                    if (gastos.length > 0) {
+                        gastos.forEach(gasto => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${gasto.fecha_gasto}</td><td>${gasto.descripcion}</td><td>${gasto.proveedor || ''}</td><td>$${gasto.monto.toFixed(2)}</td><td>${gasto.factura || ''}</td><td>${gasto.registrado_por || ''}</td>`;
+                            expensesBody.appendChild(tr);
+                        });
+                    } else { expensesBody.innerHTML = '<tr class="loader"><td colspan="6">No hay gastos registrados.</td></tr>'; }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
