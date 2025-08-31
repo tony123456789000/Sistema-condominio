@@ -4,6 +4,8 @@ set -o errexit
 
 pip install -r requirements.txt
 
-flask db init
-flask db migrate -m "Initial migration"
-flask db upgrade
+# Usamos 'python -m flask' que es una forma más robusta de llamar a los comandos
+python -m flask db init
+python -m flask db migrate -m "Initial migration"
+python -m flask db upgrade
+python -m flask init-db # Ejecutamos nuestro nuevo comando para crear la BD y los usuarios
