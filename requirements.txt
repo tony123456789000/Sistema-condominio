@@ -7,5 +7,6 @@ werkzeug
 Flask-Cors
 gunicorn
 psycopg2-binary
-Flask-Migrate
+
+
 
