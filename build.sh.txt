@@ -6,4 +6,5 @@ pip install -r requirements.txt
 
 # Este es el único comando que necesitamos para crear la base de datos y los usuarios.
 python -m flask create-db
-4.  Haz clic en **"Commit changes"** para guardar.
+
+
